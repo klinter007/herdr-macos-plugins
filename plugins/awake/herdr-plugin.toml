@@ -1,0 +1,41 @@
+id = "gili.awake"
+name = "Stay Awake"
+version = "0.1.0"
+min_herdr_version = "0.9.3"
+description = "Stay Awake for local macOS projects"
+platforms = ["macos"]
+
+[[actions]]
+id = "menu"
+title = "Stay Awake…"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "menu"]
+
+[[actions]]
+id = "toggle"
+title = "Stay Awake: Toggle On / Off"
+contexts = ["workspace", "pane", "global"]
+command = ["python3", "run.py", "toggle"]
+
+[[actions]]
+id = "on"
+title = "Stay Awake: On"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "on"]
+
+[[actions]]
+id = "off"
+title = "Stay Awake: Off"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "off"]
+
+[[panes]]
+id = "picker"
+title = "Stay Awake"
+placement = "popup"
+width = 72
+height = 11
+command = ["python3", "run.py", "picker"]
+
+[[startup]]
+command = ["python3", "run.py", "startup"]

@@ -1,0 +1,62 @@
+id = "gili.files"
+name = "Files and Links"
+version = "0.2.0"
+min_herdr_version = "0.9.3"
+description = "Files and Links for local macOS projects"
+platforms = ["macos"]
+
+[[actions]]
+id = "menu"
+title = "Files and Links…"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "menu"]
+
+[[actions]]
+id = "quick-open"
+title = "Open Files and Folders…"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "quick-open"]
+
+[[actions]]
+id = "open"
+title = "Open File"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "open"]
+
+[[actions]]
+id = "reveal"
+title = "Reveal in Finder"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "reveal"]
+
+[[actions]]
+id = "tab"
+title = "Open in Herdr Tab"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "tab"]
+
+[[actions]]
+id = "copy"
+title = "Copy Path or Link"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "copy"]
+
+[[panes]]
+id = "picker"
+title = "Files and Links"
+placement = "popup"
+width = "85%"
+height = "65%"
+command = ["python3", "run.py", "picker"]
+
+[[link_handlers]]
+id = "local-file"
+title = "Open File"
+pattern = "^file://"
+action = "quick-open"
+
+[[panes]]
+id = "viewer"
+title = "File / Browser"
+placement = "tab"
+command = ["python3", "run.py", "viewer"]

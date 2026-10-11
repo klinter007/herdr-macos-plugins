@@ -1,0 +1,35 @@
+id = "gili.metrics"
+name = "System Monitor"
+version = "0.1.0"
+min_herdr_version = "0.9.3"
+description = "One CPU, drive and active-project folder-size monitor"
+platforms = ["macos"]
+
+[[actions]]
+id = "menu"
+title = "System Monitor…"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "menu"]
+
+[[actions]]
+id = "start"
+title = "Start System Monitor"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "start"]
+
+[[actions]]
+id = "stop"
+title = "Stop System Monitor"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "stop"]
+
+[[panes]]
+id = "picker"
+title = "System Monitor"
+placement = "popup"
+width = "85%"
+height = "65%"
+command = ["python3", "run.py", "picker"]
+
+[[startup]]
+command = ["python3", "run.py", "startup"]
