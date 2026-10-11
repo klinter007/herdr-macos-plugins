@@ -7,7 +7,7 @@ from .common import notify
 
 def main():
     feature, command = sys.argv[1:3]
-    if feature not in ("files", "metrics", "awake"):
+    if feature not in ("files", "metrics", "awake", "jev"):
         raise ValueError("Unknown feature")
     try:
         importlib.import_module(f"herdr_tools.{feature}").main(command)
