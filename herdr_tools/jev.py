@@ -128,7 +128,7 @@ def picker():
         actions.append('close')
         selected = choose(title, labels, mouse=True,
                           subtitle='Click / Enter · Esc close' if gateway else
-                          'Click / Enter · new sessions start Off · Esc close')
+                          'A running agent can\'t switch to Jev · new tabs start Off · Esc close')
         if selected is None or actions[selected] == 'close':
             return
         action = actions[selected]
