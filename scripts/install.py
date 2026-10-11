@@ -22,7 +22,7 @@ END = '# END gili-herdr-tools'
 STATUS_BEGIN = '# BEGIN gili-herdr-status'
 STATUS_END = '# END gili-herdr-status'
 FEATURES = {'files': ('o', 'Files and Links'), 'awake': ('a', 'Stay Awake'),
-            'metrics': ('m', 'System Monitor')}
+            'metrics': ('m', 'System Monitor'), 'jev': ('j', 'Jev: Session On / Off')}
 ENV = {k: v for k, v in os.environ.items() if not k.startswith('HERDR_')}
 
 

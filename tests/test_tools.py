@@ -371,5 +371,44 @@ class Awake(unittest.TestCase):
             self.assertEqual(awake.mode(), 'on')
 
 
+class Jev(unittest.TestCase):
+    def test_rejects_invalid_ports_before_request(self):
+        from herdr_tools.jev import gateway_request
+        for port in (True, 80, 70000, '8790', None):
+            with self.assertRaises(UserError):
+                gateway_request(port, '/health')
+
+    def test_does_not_toggle_a_replaced_gateway(self):
+        from herdr_tools.jev import set_routing
+        with patch('herdr_tools.jev.gateway_request', return_value={'pid': 99}) as request:
+            with self.assertRaises(UserError):
+                set_routing({'port': 8790, 'pid': 98}, False)
+            self.assertEqual(request.call_count, 1)
+
+    def test_toggle_checks_identity_and_confirms_state(self):
+        from herdr_tools.jev import set_routing
+        with patch('herdr_tools.jev.gateway_request', side_effect=[
+                {'pid': 98}, {'router': {'client': 'codex', 'routing': True}}, {'routing': False}]) as request:
+            set_routing({'port': 8790, 'pid': 98, 'agent': 'codex'}, False)
+            self.assertEqual(request.call_args.args, (8790, '/dashboard/routing?enabled=false', 'POST'))
+
+    def menu_labels(self, gateway):
+        from herdr_tools import jev
+        with patch.object(jev, 'source_context', return_value={}), \
+                patch.object(jev, 'gateway_for_pane', return_value=gateway), \
+                patch.object(jev, 'gateway_status', return_value={'routing': False}), \
+                patch.object(jev, 'choose', return_value=None) as choose:
+            jev.picker()
+        return choose.call_args.args[1]
+
+    def test_session_pane_only_offers_its_own_switch(self):
+        labels = self.menu_labels({'agent': 'claude', 'shared': False, 'port': 9000, 'pid': 1})
+        self.assertTrue(labels[0].startswith('Turn Jev On'))
+        self.assertFalse(any('New' in label for label in labels))
+
+    def test_plain_pane_offers_new_sessions(self):
+        self.assertEqual(self.menu_labels(None), ['New Claude + Jev tab…', 'New Codex + Jev tab…', 'Close'])
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,26 @@
+id = "gili.jev"
+name = "Jev Gateway"
+version = "0.2.0"
+min_herdr_version = "0.9.3"
+description = "Selected-session gateway controls and isolated Codex/Claude launches"
+platforms = ["macos"]
+
+[[actions]]
+id = "menu"
+title = "Jev: Session On / Off…"
+contexts = ["workspace", "pane"]
+command = ["python3", "run.py", "menu"]
+
+[[panes]]
+id = "picker"
+title = "Jev Gateway"
+placement = "popup"
+width = "85%"
+height = 14
+command = ["python3", "run.py", "picker"]
+
+[[panes]]
+id = "session"
+title = "Jev Agent"
+placement = "tab"
+command = ["python3", "run.py", "session"]

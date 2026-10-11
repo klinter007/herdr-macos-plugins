@@ -1,78 +1,69 @@
 # Herdr macOS plugins
 
-Three small plugins for [Herdr](https://herdr.dev): open files from terminal output,
-keep your Mac awake, and see CPU/disk/project-folder usage in one status bar.
-Uses standard Herdr—no custom build. MIT licensed.
+Four small plugins for [Herdr](https://herdr.dev) on macOS. Open files straight from agent output, keep the Mac awake while agents work, see CPU, disk and folder size in the tab bar, and switch Jev on or off per Claude or Codex session.
+
+Works with standard Herdr 0.9.3, no custom build. MIT licensed.
+
+![Status bar: CPU, free disk, project folder size, awake](docs/images/status-bar.png)
 
 ## Files and Links
 
-Select a path, filename, or passage containing paths, then press **Control+Option+O**.
+Press **Control+Option+O**. The plugin finds the files mentioned in the pane (or in what you selected) and asks which one to open.
 
-- **One file:** an “Open where?” menu, naming the app macOS would normally use.
-- **Several files:** choose one, then choose where to open it.
-- **Folder:** opens directly in Finder.
+![Choose a file from the agent's reply](docs/images/files-choose.png)
 
-Menus accept mouse clicks, arrow keys and Enter; Esc closes them. Reveal in Finder
-and Copy Path are also available. File links go through the same menu. macOS file
-packages, including `.app` bundles, get the file menu rather than the folder shortcut.
+One file goes straight to "Open where?". The default entry is the app macOS already uses for that file, so an MP4 opens in QuickTime (or whatever you set), same as `open` in the terminal. Folders open in Finder.
 
-MP4, JPEG, HTML, Markdown and other files use the default application configured
-on **your** Mac, exactly as `/usr/bin/open` does. No extension-to-app list is
-hardcoded. The menu queries Launch Services for the actual app name. Opening a
-movie requests the default player; whether playback begins automatically is up
-to that application.
+![Open where? menu](docs/images/files-open-where.png)
 
-Relative paths use the source pane's directory, then its project directory. Spaces,
-Unicode, `file://` URLs, Markdown paths and line/column suffixes are supported.
-Select all fragments of a path broken across lines. A passage such as
-`Watch (output/movie.mp4) · Read (output/story.txt)` offers both files. A filename
-fragment narrows the list to matching complete paths visible in the pane.
+Paths can be relative, absolute, `file://` links, Markdown links, or have `:line:col` at the end. Spaces and Unicode are fine. A sentence with a few paths in parentheses offers all of them.
 
-Herdr 0.9.3 clears mouse selections before dispatching plugin shortcuts. As a
-workaround, the plugin reads the clipboard **only when invoked** and uses
-path-shaped copied text only if it appears in the visible pane. Herdr's default
-`copy_on_select = true` makes this automatic; otherwise copy first. An older copied
-path can still be considered while visible. There is no clipboard watcher.
-With no usable selection, the menu lists paths detected on the visible screen.
-Plain single clicks on arbitrary text and native right-click menus are not provided.
-Unselected scanning skips bare extensionless names and dotfiles such as Makefile
-and .env to avoid treating ordinary words as files; explicitly select those paths.
+Herdr 0.9.3 clears the mouse selection before a plugin shortcut runs, so the plugin reads the clipboard once when you press the shortcut and only uses it if that text is on screen. With Herdr's default `copy_on_select = true` this just works. There is no clipboard watcher.
 
-“Open in Herdr Tab” is optional and shown only when a compatible Tode (files) or
-terminal-browser (web links) command is available. Neither is bundled or installed.
-The optional editor integration uses a local code-server backend and project-local
-runtime state; ordinary default-app opening has no such dependency. See
-[verification and limitations](VERIFICATION.md) before using that integration.
+Limits: with nothing selected, the scan skips bare words with no extension or slash (`Makefile`, `.env`) so normal words don't turn into files. Select those paths and it works.
 
-## Stay Awake
-
-**Ctrl+B**, release, then **Shift+A** opens a clickable On/Off menu. On runs
-`caffeinate -di -w <worker-pid>`, preventing idle system and display sleep while
-its worker lives. It does not override closing the lid or OS-enforced sleep.
-The saved choice is restored when the Herdr server starts.
-
-**☕** running · **🌙** off · **⏳** changing · **❔** unconfirmed/error.
-The status reflects the observed worker state. Confirmed server loss or disabling
-the plugin releases the assertion. Temporary API failures are tolerated for up
-to 15 minutes; continued failure then releases it. The native status bar is an
-indicator, not a clickable control.
+"Open in Herdr Tab" only shows up if you have Tode (files) or terminal-browser (links) installed. Neither is bundled. See [VERIFICATION.md](VERIFICATION.md) before using it.
 
 ## System Monitor
 
-One compact status area: **⚙ CPU · 💾 free space · 📁 folder size · ☕/🌙 awake**.
-CPU is sampled once per Herdr session; disk space follows the active project's
-volume. Folder size is allocated disk space, including hidden/dependency folders,
-without following symlinks or crossing volumes. A low-priority scan is limited to
-30 seconds, with a five-minute cache. Unavailable/stale readings are indicated.
+CPU, free space on the project's drive and the project folder size, in the tab bar. **Ctrl+B**, then **Shift+M** for details.
 
-**Ctrl+B**, release, then **Shift+M** opens details. A narrow terminal may hide
-status-bar content. Metrics workers stop when disabled or their server is lost.
+![System Monitor details](docs/images/system-monitor.png)
+
+Folder size is allocated disk space, without following symlinks or crossing volumes. The scan runs at low priority, stops after 30 seconds and is cached for 5 minutes.
+
+## Stay Awake
+
+**Ctrl+B**, then **Shift+A**. On runs `caffeinate -di` for as long as the plugin's worker is alive, so idle sleep and display sleep are blocked. Closing the lid still sleeps the Mac. The choice is restored when Herdr starts.
+
+![Stay Awake menu](docs/images/stay-awake.png)
+
+Tab bar icon: ☕ on, 🌙 off, ⏳ changing, ❔ not confirmed. If the Herdr server goes away, awake is released. Short API stalls are tolerated for up to 15 minutes.
+
+## Jev
+
+[jev-gateway](https://github.com/vinilana/jev-gateway) is a local gateway that sends an agent's "which tool next" decisions to Jev, TypeSafe's fast decision model, and everything else to your usual model. **Ctrl+B**, then **Shift+J**.
+
+In a pane without Jev, the menu opens a new tab named **Claude + Jev** or **Codex + Jev**. Each tab gets its own gateway and starts with Jev Off.
+
+![Jev menu in a plain pane](docs/images/jev-new.png)
+
+Inside a Jev tab, the same shortcut turns Jev on or off for that session only. It doesn't open another tab.
+
+![Jev menu inside a Claude + Jev tab](docs/images/jev-session.png)
+
+If the pane runs the official `jev-claude` or `jev-codex` launcher, the switch changes the shared gateway, so it asks first.
+
+Needs Node.js 22.15+, a Jev key and the gateway:
+
+```sh
+npm install -g jev-gateway
+jev-claude --setup
+```
 
 ## Install
 
-Requires **macOS**, **Herdr 0.9.3+**, and **Python 3.11+ for the installer**.
-Plugin runtime code is also tested on macOS's Python 3.9. The installer configures
-the default Herdr session and `~/.config/herdr/config.toml`.
+macOS, Herdr 0.9.3+ and Python 3.11+ for the installer. The plugins themselves also run on the macOS system Python 3.9.
 
 ```sh
 git clone https://github.com/klinter007/herdr-macos-plugins.git
@@ -80,44 +71,21 @@ cd herdr-macos-plugins
 python3 scripts/install.py
 ```
 
-Keep this checkout: Herdr links directly to its plugin source. The installer
-registers only these three plugins, adds removable key/status blocks, and starts
-metrics. Awake remains unchanged (Off on a fresh installation). Existing custom
-status bars and conflicting keybindings require a manual merge; the installer
-refuses to overwrite them. Existing registrations from another checkout are also
-preserved rather than silently replaced.
+Keep the checkout, Herdr links to it. The installer registers the four plugins, adds one removable block of keys and one status block to `~/.config/herdr/config.toml`, and starts the monitor. Stay Awake starts Off.
 
-Configuration symlinks and file permissions are preserved. One initial
-`config.toml.herdr-tools.bak` recovery copy is kept (not overwritten on reinstall) beside the resolved config.
-Failed operations attempt to restore the previous config and plugin registrations;
-any incomplete rollback is reported. User settings are retained on uninstall.
+It won't overwrite an existing custom status bar, a key that's already taken, or the same plugin linked from another folder. It keeps config symlinks and permissions, saves one `config.toml.herdr-tools.bak` the first time, and rolls back if a step fails.
 
-Use **Herdr Menu → reload config** in each open client after adding shortcuts;
-a server reload alone does not refresh client keybindings.
+After installing, pick **Menu → reload config** in each open Herdr client so the new keys load.
 
-### Terminal keyboard setup
+### Keyboard
 
-The shortcut is lowercase **o**, with **no Shift**. macOS calls Alt **Option**.
+The shortcut is lowercase **o**, no Shift. Option is Alt.
 
-**iTerm2:** if the shortcut reaches the agent or does nothing, add a profile key
-mapping in Settings → Profiles → Keys → Key Mappings:
+**iTerm2:** if the shortcut does nothing or goes to the agent, add a key mapping in Settings → Profiles → Keys → Key Mappings: Control+Option+o, Send Hex Code, `0x1b 0x0f` (zero, f). [iTerm docs](https://iterm2.com/documentation-preferences-profiles-keys.html).
 
-| Field | Value |
-| --- | --- |
-| Shortcut | Control+Option+o |
-| Action | Send Hex Code |
-| Value | `0x1b 0x0f` |
+**Terminal.app:** turn on Settings → Profiles → Keyboard → Use Option as Meta key. This changes all Option combos. I haven't tested the shortcut in Terminal.app. [Apple docs](https://support.apple.com/guide/terminal/trmlkbrd/mac).
 
-The last pair is **zero + f**. This mapping changes only that chord.
-[Official iTerm documentation](https://iterm2.com/documentation-preferences-profiles-keys.html).
-
-**Apple Terminal:** Apple provides **Settings → Profiles → Keyboard → Use Option
-as Meta key**. This affects Option combinations broadly, including special-character
-entry. The setting is documented, but the physical shortcut has **not** been tested
-in Terminal.app. [Apple documentation](https://support.apple.com/guide/terminal/trmlkbrd/mac).
-
-Fallback in either terminal: **Ctrl+B**, release, then **Shift+O** opens the same
-file menu. This uses Herdr's normal prefix and needs no Option mapping.
+Without any mapping, **Ctrl+B** then **Shift+O** opens the same file menu.
 
 ### Remove
 
@@ -125,22 +93,14 @@ file menu. This uses Herdr's normal prefix and needs no Option mapping.
 python3 scripts/install.py --uninstall
 ```
 
-This unlinks the three plugins and removes their managed config blocks. Repeating
-uninstall is supported. Saved plugin settings, the config recovery copy, and any
-optional editor runtime remain; remove them separately only if no longer needed.
-Runtime state belongs to Herdr, under its plugin state directory. Plugin IDs remain
-`gili.files`, `gili.awake`, and `gili.metrics` for compatibility with existing installs.
+Unlinks the plugins and removes the config blocks. Safe to run twice. Saved settings and the config backup stay. Plugin IDs are `gili.files`, `gili.awake`, `gili.metrics` and `gili.jev`.
 
 ## Develop
 
-The core plugins use only Python's standard library and built-in macOS tools.
+Python standard library and built-in macOS tools only (Jev also uses Node.js).
 
 ```sh
 python3 -m unittest discover -s tests -q
 ```
 
-Tests mock external app launches and installer mutations. Please report the Herdr,
-macOS, Python and terminal versions with bugs. Contributions should preserve
-relative/wrapped paths, ordinary macOS app associations, bounded background work,
-and explicit error reporting. Never include clipboard contents, credentials,
-private file paths, runtime bundles, or personal logs in an issue or commit.
+Tests mock app launches and installer changes. When reporting a bug, include Herdr, macOS, Python and terminal versions. Never paste clipboard contents, keys, private paths or logs into an issue.
