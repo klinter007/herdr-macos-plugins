@@ -63,7 +63,64 @@ jev-claude --setup
 
 ## Install
 
-macOS, Herdr 0.9.3+ and Python 3.11+ for the installer. The plugins themselves also run on the macOS system Python 3.9.
+macOS and Herdr 0.9.3+. The plugins run on any Python 3.9+, including the macOS system one. There are two ways to install.
+
+### With Herdr (no installer)
+
+```sh
+herdr plugin install klinter007/herdr-macos-plugins/plugins/files
+herdr plugin install klinter007/herdr-macos-plugins/plugins/metrics
+herdr plugin install klinter007/herdr-macos-plugins/plugins/awake
+herdr plugin install klinter007/herdr-macos-plugins/plugins/jev
+herdr plugin action invoke start --plugin gili.metrics
+```
+
+Install only the ones you want. A plugin can't add keys or the status bar by itself, so paste these into `~/.config/herdr/config.toml`:
+
+```toml
+[[keys.command]]
+key = "ctrl+alt+o"
+type = "plugin_action"
+command = "gili.files.quick-open"
+
+[[keys.command]]
+key = "prefix+shift+o"
+type = "plugin_action"
+command = "gili.files.menu"
+
+[[keys.command]]
+key = "prefix+shift+m"
+type = "plugin_action"
+command = "gili.metrics.menu"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "gili.awake.menu"
+
+[[keys.command]]
+key = "prefix+shift+j"
+type = "plugin_action"
+command = "gili.jev.menu"
+```
+
+For the status bar, Herdr keeps each plugin in its own folder. Print the System Monitor one:
+
+```sh
+herdr plugin list --plugin gili.metrics --json | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['plugins'][0]['source']['managed_path'])"
+```
+
+Then add this under `[ui]`, with that folder in place of `<folder>`:
+
+```toml
+tab_bar_right = [{ type = "command", command = "python3 <folder>/scripts/status.py", interval_seconds = 3, timeout_seconds = 2 }]
+```
+
+Run `herdr config check`, then pick **Menu → reload config** in each open client. If you reinstall the monitor, print the folder again and update the line if it changed.
+
+### With the installer
+
+Does the keys and the status bar for you. Needs Python 3.11+.
 
 ```sh
 git clone https://github.com/klinter007/herdr-macos-plugins.git
