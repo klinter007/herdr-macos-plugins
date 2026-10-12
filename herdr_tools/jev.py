@@ -92,11 +92,42 @@ def set_routing(gateway, enabled):
         raise UserError('The gateway did not confirm the requested routing state.')
 
 
+def agent_process(argv):
+    if not argv:
+        return False
+    executable = Path(argv[0]).name
+    if executable in DEFAULT_PORTS or re.fullmatch(r'codex-(?:aarch64|x86_64)-apple-darwin', executable):
+        return True
+    return executable in ('node', 'nodejs') and any(
+        arg.endswith(('/@openai/codex/bin/codex.js', '/@anthropic-ai/claude-code/cli.js'))
+        for arg in argv[1:])
+
+
+def launch_directory(ctx):
+    cwd, _ = roots(ctx)
+    pane_id = ctx.get('focused_pane_id')
+    if not pane_id or Path(cwd).resolve() != ROOT / 'plugins/jev':
+        return cwd
+    # Older supervisors stayed in the plugin root. Recover the running agent's
+    # actual directory so launching from an existing tab does not spread that bug.
+    processes = api('pane.process_info', {'pane_id': pane_id})['process_info']['foreground_processes']
+    wrapper = str(ROOT / 'scripts/jev-session.mjs')
+    if not any(wrapper in proc.get('argv', []) for proc in processes):
+        return cwd
+    directories = {proc['cwd'] for proc in processes
+                   if agent_process(proc.get('argv', []))
+                   and proc.get('cwd') and Path(proc['cwd']).is_absolute()
+                   and Path(proc['cwd']).is_dir()}
+    if len(directories) != 1:
+        raise UserError('Could not determine this older Jev tab’s project. Open Jev from a project shell pane.')
+    return directories.pop()
+
+
 def launch(kind, ctx):
     if kind not in DEFAULT_PORTS:
         raise UserError('Choose Codex or Claude.')
     package = installed_package()
-    cwd, _ = roots(ctx)
+    cwd = launch_directory(ctx)
     record = state_dir(True) / f'gateway-{uuid.uuid4().hex}.json'
     return api('plugin.pane.open', {
         'plugin_id': 'gili.jev', 'entrypoint': 'session', 'placement': 'tab',

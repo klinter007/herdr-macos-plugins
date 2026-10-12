@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { createConnection } from 'node:net';
 import { createRequire } from 'node:module';
 import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, isAbsolute } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 function api(method, params) {
@@ -26,10 +26,22 @@ function api(method, params) {
   });
 }
 
+export function enterProjectDirectory(cwd = process.env.TOOLS_JEV_CWD) {
+  if (!cwd || !isAbsolute(cwd)) throw new Error('Missing absolute source project directory');
+  // Herdr observes the foreground supervisor's cwd, not just its agent child.
+  // Leave the plugin directory before starting either the gateway or the agent.
+  process.chdir(cwd);
+  const resolved = process.cwd();
+  process.env.PWD = resolved;
+  process.env.TOOLS_JEV_CWD = resolved;
+  return resolved;
+}
+
 export async function runSession({spawnAgent = spawn} = {}) {
   const root = process.env.TOOLS_JEV_PACKAGE;
   const kind = process.env.TOOLS_JEV_AGENT;
   if (!root || !['codex', 'claude'].includes(kind)) throw new Error('Missing Jev agent/package');
+  const cwd = enterProjectDirectory();
   const load = file => import(pathToFileURL(`${root}/${file}`));
   const {loadEnv} = await load('bin/launcher.mjs');
   loadEnv();
@@ -64,7 +76,7 @@ export async function runSession({spawnAgent = spawn} = {}) {
     const pane = (await api('pane.get', {pane_id: paneId})).pane;
     mkdirSync(dirname(record), {recursive: true, mode: 0o700});
     writeFileSync(record + '.new', JSON.stringify({port, pid: process.pid, agent: kind,
-      pane_id: paneId, terminal_id: pane.terminal_id, started_at: Date.now()}), {mode: 0o600});
+      pane_id: paneId, terminal_id: pane.terminal_id, cwd, started_at: Date.now()}), {mode: 0o600});
     renameSync(record + '.new', record);
     const updateLabel = async () => {
       if (busy || !labelsEnabled) return;
@@ -88,7 +100,7 @@ export async function runSession({spawnAgent = spawn} = {}) {
     timer = setInterval(updateLabel, 3000);
     console.log('Jev: Off for this agent session. Ctrl+B, then Shift+J opens its On/Off control.');
     child = spawnAgent(spec.client, spec.args?.(origin) ?? [], {
-      cwd: process.env.TOOLS_JEV_CWD, stdio: 'inherit', env: {...process.env, ...spec.env?.(origin)},
+      cwd, stdio: 'inherit', env: {...process.env, ...spec.env?.(origin), PWD: cwd},
     });
     const stop = () => { child.kill('SIGTERM'); setTimeout(() => child.kill('SIGKILL'), 3000).unref(); };
     for (const signal of ['SIGTERM', 'SIGHUP']) process.once(signal, stop);
@@ -116,5 +128,9 @@ export async function runSession({spawnAgent = spawn} = {}) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try { process.exitCode = await runSession(); }
-  catch (error) { console.error('Jev session:', error.message); process.exitCode = 1; }
+  catch (error) {
+    console.error('Jev session:', error.message);
+    await api('notification.show', {title: 'Jev session could not start', body: error.message, sound: 'none'}).catch(() => {});
+    process.exitCode = 1;
+  }
 }

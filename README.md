@@ -44,7 +44,7 @@ Tab bar icon: ☕ on, 🌙 off, ⏳ changing, ❔ not confirmed. If the Herdr se
 
 [jev-gateway](https://github.com/vinilana/jev-gateway) is a local gateway that sends an agent's "which tool next" decisions to Jev, TypeSafe's fast decision model, and everything else to your usual model. **Ctrl+B**, then **Shift+J**.
 
-In a pane without Jev, the menu opens a new tab named **Claude + Jev** or **Codex + Jev**. Each tab gets its own gateway and starts with Jev Off.
+In a pane without Jev, the menu opens a new tab named **Claude + Jev** or **Codex + Jev** in that pane's working directory. Each tab gets its own gateway and starts with Jev Off.
 
 ![Jev menu in a plain pane](docs/images/jev-new.png)
 
